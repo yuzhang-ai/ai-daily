@@ -17,10 +17,52 @@ SRC = HERE.parent / "outputs"
 OUT = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else HERE / "dist"
 REPO_URL = "https://github.com/yuzhang-ai/ai-daily"
 WEEK = "一二三四五六日"
-PALETTE = 6  # number of cover hues in style.css (.c0 ... .c5)
-ASSETS = ("style.css", "fonts")
+# Cover gradients (name, dark stop, light stop). Ordered so neighbours in the rotation differ in hue.
+# An issue picks one with a `封面色：名称` line (or `封面色：#rrggbb[, #rrggbb]`); otherwise it rotates.
+PALETTE = [("靛蓝", "#2b2fb8", "#5a63ff"), ("珊瑚", "#c2410c", "#ff7a59"),
+           ("青绿", "#0b7a8a", "#22c1c3"), ("紫罗兰", "#5b2bd6", "#a06bff"),
+           ("琥珀", "#b45309", "#f5a524"), ("墨绿", "#0f5b45", "#2bb673"),
+           ("玫红", "#be185d", "#f472b6"), ("极光", "#0369a1", "#8b5cf6"),
+           ("橄榄", "#3f4a0f", "#9aab2e"), ("日落", "#ea580c", "#db2777"),
+           ("石墨", "#2a2f45", "#5b6280"), ("海蓝", "#075985", "#38bdf8")]
+HEX = re.compile(r"#[0-9a-fA-F]{6}\b")
+ASSETS = ("style.css", "fonts", "icons")
+# Source sites: (host suffix, icon in site/icons, display name). First match wins, so list
+# specific subdomains before their parent. Unknown hosts fall back to a link glyph + bare host.
+SITES = [
+    ("github.com", "github", "GitHub"), ("cdn.openai.com", "openai", "OpenAI"),
+    ("developers.openai.com", "openai", "OpenAI 开发者"), ("openai.com", "openai", "OpenAI"),
+    ("chatgpt.com", "chatgpt", "ChatGPT"), ("arxiv.org", "arxiv", "arXiv"),
+    ("platform.claude.com", "claude", "Claude 文档"), ("claude.com", "claude", "Claude"),
+    ("anthropic.com", "anthropic", "Anthropic"), ("latent.space", "latentspace", "Latent Space"),
+    ("deepmind.google", "deepmind", "Google DeepMind"), ("antigravity.google", "antigravity", "Antigravity"),
+    ("blog.google", "google", "Google 博客"), ("storage.googleapis.com", "google", "Google"),
+    ("developers.googleblog.com", "googledev", "Google 开发者博客"),
+    ("developer.chrome.com", "chrome", "Chrome 开发者"), ("cursor.com", "cursor", "Cursor"),
+    ("cognition.com", "cognition", "Cognition"), ("cognition.ai", "cognition", "Cognition"),
+    ("devin.ai", "devin", "Devin"), ("news.ycombinator.com", "hn", "Hacker News"),
+    ("learn.microsoft.com", "microsoft", "Microsoft Learn"), ("langchain.com", "langchain", "LangChain"),
+    ("dwarkesh.com", "dwarkesh", "Dwarkesh"), ("wiz.io", "wiz", "Wiz"),
+    ("platform.kimi.ai", "kimi", "Kimi 开放平台"), ("kimi.com", "kimi", "Kimi"),
+    ("minimax.io", "minimax", "MiniMax"), ("isomorphiclabs.com", "isomorphic", "Isomorphic Labs"),
+    ("huggingface.co", "huggingface", "Hugging Face"), ("elevenlabs.io", "elevenlabs", "ElevenLabs"),
+    ("amazon.science", "amazon", "Amazon Science"), ("agents-last-exam.org", "ale", "Agents' Last Exam"),
+    ("0din.ai", "odin", "0DIN"), ("thevelocitywhitepapers.com", "velocity", "Velocity"),
+]
+GENERIC_LINK = {"来源", "原文", "链接", "source", "link"}
+LINK_SVG = ('<svg class="src-ico" viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" '
+            'stroke-width="1.6" stroke-linecap="round" d="M6.5 9.5l3-3M7 4.5l1-1a2.8 2.8 0 014 4l-1 1M9 11.5l-1 1a2.8 2.8 0 01-4-4l1-1"/></svg>')
+OUT_SVG = ('<svg class="src-out" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" '
+           'stroke-width="1.4" stroke-linecap="round" d="M4.5 2.5h5v5M9.5 2.5l-7 7"/></svg>')
+GH_SVG = ('<svg class="gh" viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M8 0C3.58 0 0 3.58 0 8c0 '
+          '3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94'
+          '-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2'
+          '-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 '
+          '1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95'
+          '.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg>')
 
 STORY_KEYS = [("来源链接", "src"), ("类型", "type"), ("推荐指数", "stars"),
+              ("配图", "img"), ("关键数字", "keynum"),
               ("一句话总结", "tldr"), ("为什么重要", "why"), ("核心观点", "points"),
               ("对 AI", "insight"), ("这意味着", "insight"), ("可落地", "action"), ("风险", "risk"),
               ("是否值得精读", "worth")]
@@ -88,7 +130,50 @@ def parse_story(block):
     f["src"] = LOCAL_LINK.sub("", LOCAL_FILE.sub("", f.get("src", "")))
     links = re.findall(r"\[([^\]]+)\]\((https?://[^)\s]+)\)", f["src"])
     return {"org": org, "title": title, "stars": parse_stars(f.get("stars")),
-            "links": links, **{k: v for k, v in f.items() if k != "stars"}}
+            "links": links, "image": parse_image(f.pop("img", "")),
+            "stat": parse_stat(f.pop("keynum", "")),
+            **{k: v for k, v in f.items() if k != "stars"}}
+
+
+IMG_RE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)\s*(?:[（(]([^）)]*)[）)])?")
+
+
+def parse_image(s):
+    """`![alt](images/DATE/x.jpg)（图源：Google）` -> {src, alt, credit}; local paths are relative to outputs/."""
+    m = IMG_RE.search(s or "")
+    if not m:
+        return None
+    src = m.group(2)
+    if not src.startswith("https://"):
+        src = src.removeprefix("outputs/")
+        if ".." in src or not (SRC / src).is_file():
+            print(f"warning: image not found, skipped: {m.group(2)}", file=sys.stderr)
+            return None
+    return {"src": src, "alt": m.group(1).strip(), "credit": (m.group(3) or "").strip()}
+
+
+def parse_stat(s):
+    """`2 美元 | 每百万输入 token 首发价` -> (value, label)."""
+    if not (s or "").strip():
+        return None
+    parts = re.split(r"\s*[|｜]\s*", s.strip(), maxsplit=1)
+    return parts[0], parts[1] if len(parts) > 1 else ""
+
+
+def cover_colors(raw, no):
+    """Resolve an issue's `封面色` line (palette name or 1–2 hex values); fall back to rotation."""
+    raw = (raw or "").strip().rstrip("。.")
+    hexes = HEX.findall(raw)
+    if hexes:
+        return hexes[0], hexes[1] if len(hexes) > 1 else f"color-mix(in oklab,{hexes[0]},#fff 40%)"
+    for name, a, b in PALETTE:
+        if raw == name:
+            return a, b
+    if raw:
+        names = "、".join(n for n, _, _ in PALETTE)
+        print(f"warning: unknown 封面色 {raw!r}, using rotation. Known: {names}", file=sys.stderr)
+    _, a, b = PALETTE[(no - 1) % len(PALETTE)]
+    return a, b
 
 
 def parse_repos(text):
@@ -116,6 +201,8 @@ def parse_issue(path):
     date = datetime.date.fromisoformat(re.search(r"\d{4}-\d{2}-\d{2}", path.name).group())
     issue = {"date": date, "stories": [], "repos": [], "lede": "", "actions": [], "checks": [],
              "briefs": []}
+    c = re.search(r"^封面色[：:]\s*(.+)$", text, flags=re.M)
+    issue["color_raw"] = c.group(1) if c else ""
     for sec in re.split(r"^## ", text, flags=re.M)[1:]:
         name, _, body = sec.partition("\n")
         if "快讯" in name:
@@ -172,6 +259,34 @@ def blocks(text):
     return "".join(out)
 
 
+def site_of(url):
+    host = re.sub(r"^www\.", "", re.sub(r"^https?://", "", url).split("/")[0].lower())
+    for suf, icon, name in SITES:
+        if host == suf or host.endswith("." + suf):
+            return icon, name
+    return None, host
+
+
+def src_chip(text, url):
+    """A source link that reads as one: site icon + a name (the link text, or the site name if generic)."""
+    icon, name = site_of(url)
+    label = name if text.strip().lower() in GENERIC_LINK else text
+    ico = (f'<img class="src-ico" src="icons/{icon}.png" alt="" width="16" height="16" loading="lazy">'
+           if icon else LINK_SVG)
+    return f'<a class="src" href="{esc(url)}" title="{esc(name)}">{ico}<span>{esc(label)}</span>{OUT_SVG}</a>'
+
+
+LINK_RE = r"\[([^\]]+)\]\((https?://[^)\s]+)\)"
+
+
+def brief(b):
+    """'**Org · Title**：text [来源](url)' -> text with the trailing links pulled out as source chips."""
+    m = re.search(rf"(?:\s*{LINK_RE}[。；;，,\s]*)+$", b)
+    text, tail = (b[:m.start()], b[m.start():]) if m else (b, "")
+    chips = "".join(src_chip(t, u) for t, u in re.findall(LINK_RE, tail))
+    return f'<li><p>{inline(text.rstrip())}</p>{f"<p class=srcs>{chips}</p>" if chips else ""}</li>'
+
+
 def plain(s):
     return re.sub(r"[`*]", "", s or "")
 
@@ -194,7 +309,8 @@ def cover(i, big=False):
     """A generated issue cover: brand strip, lead headline, two more headlines, issue badge."""
     s = i["stories"]
     more = "".join(f"<li>{esc(plain(x['title']))}</li>" for x in s[1:3])
-    return f'''<div class="cover c{i["no"] % PALETTE}{' big' if big else ''}" style="view-transition-name:cv-{ymd(i)}" aria-hidden="true">
+    a, b = i["colors"]
+    return f'''<div class="cover{' big' if big else ''}" style="--cv-a:{a};--cv-b:{b};view-transition-name:cv-{ymd(i)}" aria-hidden="true">
   <div class="cv-panel">
     <div class="cv-head"><span class="cv-brand">AI 每日简报</span><span class="cv-date">{i["date"]:%Y.%m.%d}</span></div>
     <p class="cv-lead">{esc(plain(s[0]["title"])) if s else ""}</p>
@@ -231,6 +347,7 @@ def page(title, band, body, desc=""):
 </div></header>
 {band}
 </div>
+<div class="band-fade" aria-hidden="true"></div>
 {body}
 <footer class="site-foot"><div class="wrap">{FOOT}</div></footer>
 </body>
@@ -264,29 +381,40 @@ def render_index(issues):
 def render_issue(i, prev, nxt):
     stories = []
     for n, s in enumerate(i["stories"], 1):
-        src = "".join(f'<a href="{esc(u)}">{esc(t)}</a>' for t, u in s["links"])
+        src = "".join(src_chip(t, u) for t, u in s["links"])
         parts = "".join(f'<section class="part"><h3>{label}</h3>{blocks(s[k])}</section>'
                         for k, label in SECTION_TITLES if s.get(k))
         org = f'<span class="org">{esc(s["org"])}</span>' if s["org"] else ""
-        stories.append(f'''<article class="story" id="s{n}">
+        img = s.get("image")
+        fig = (f'''<figure class="story-img"><img src="{esc(img["src"])}" alt="{esc(img["alt"])}" loading="lazy" decoding="async">
+  {f'<figcaption>{esc(img["credit"])}</figcaption>' if img["credit"] else ""}</figure>''' if img else "")
+        stat = s.get("stat")
+        stat_html = (f'<p class="stat"><b>{esc(stat[0])}</b><span>{esc(stat[1])}</span></p>' if stat else "")
+        stories.append(f'''<article class="story{' has-img' if img else ''}" id="s{n}">
+  {fig}
   <header class="story-head">
     <span class="story-no">{n}</span>
     <div><p class="story-meta">{org}{esc(plain(s.get("type", "")))}{stars(s["stars"])}</p>
     <h2>{esc(plain(s["title"]))}</h2></div>
   </header>
-  <p class="tldr">{inline(s.get("tldr"))}</p>
+  <div class="lead-row">{stat_html}<p class="tldr">{inline(s.get("tldr"))}</p></div>
   {parts}
-  <p class="sources">原文{src}</p>
+  <p class="sources"><span class="src-label">原文</span>{src}</p>
 </article>''')
     repos = "".join(f'''<a class="repo" href="{esc(r["href"])}">
-  <span class="repo-name">{esc(r["name"])}</span><span class="repo-star">{esc(r.get("star", ""))}</span>
+  <span class="repo-name">{GH_SVG}<span>{esc(r["name"]).replace("/", "/<wbr>")}</span></span><span class="repo-star">{esc(r.get("star", ""))}</span>
   <span class="repo-what">{inline(r.get("what"))}</span>
   {f'<span class="repo-how">{inline(r.get("why" if PUBLIC else "how"))}</span>' if r.get("why" if PUBLIC else "how") else ""}</a>''' for r in i["repos"])
     acts = "".join(f"<li>{inline(a)}</li>" for a in i["actions"])
-    briefs = "".join(f"<li>{inline(b)}</li>" for b in i["briefs"])
+    briefs = "".join(brief(b) for b in i["briefs"])
     checks = "".join(f'<li class="{"ok" if ok else "todo"}">{inline(t)}</li>' for ok, t in i["checks"])
-    nav = (f'<a class="prev" href="{ymd(prev)}.html">上一期<b>{dot_date(prev)}</b></a>' if prev else "<span></span>") + \
-          (f'<a class="next" href="{ymd(nxt)}.html">下一期<b>{dot_date(nxt)}</b></a>' if nxt else "<span></span>")
+    def pg(x, cls, label):
+        if not x:
+            return "<span></span>"
+        return f'''<a class="pg {cls}" href="{ymd(x)}.html"><span class="pg-label">{label}</span>{cover(x)}
+  <span class="card-date">第 {x["no"]} 期 · {dot_date(x)}</span>
+  <span class="card-lede">{esc(plain(x["lede"]))}</span></a>'''
+    nav = pg(prev, "prev", "上一期") + pg(nxt, "next", "下一期")
     band = f'''<header class="issue-head wrap">
     {cover(i, big=True)}
     <div class="issue-intro">
@@ -297,8 +425,8 @@ def render_issue(i, prev, nxt):
   </header>'''
     body = f'''<main class="issue wrap">
   {"".join(stories)}
-  {f'<section class="block"><h2>快讯</h2><ol class="actions briefs">{briefs}</ol></section>' if briefs else ""}
-  {f'<section class="block"><h2>值得研究的开源项目</h2><div class="repos">{repos}</div></section>' if repos else ""}
+  {f'<section class="block"><h2>快讯</h2><ol class="briefs">{briefs}</ol></section>' if briefs else ""}
+  {f'<section class="block"><h2>值得研究的开源项目<span class="h-tag">{GH_SVG}GitHub</span></h2><div class="repos">{repos}</div></section>' if repos else ""}
   {f'<section class="block"><h2>明天可以做的事</h2><ol class="actions">{acts}</ol></section>' if acts and not PUBLIC else ""}
   {f'<details class="checks"><summary>人工验证清单</summary><ul>{checks}</ul></details>' if checks and not PUBLIC else ""}
   <nav class="pager">{nav}</nav>
@@ -312,12 +440,15 @@ def main():
         sys.exit(f"no issues found in {SRC}")
     for n, i in enumerate(issues, 1):
         i["no"] = n
+        i["colors"] = cover_colors(i["color_raw"], n)
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
     for a in ASSETS:
         src = HERE / a
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, OUT / a)
+    if (SRC / "images").is_dir():
+        shutil.copytree(SRC / "images", OUT / "images")
     (OUT / "index.html").write_text(render_index(issues), encoding="utf-8")
     for n, i in enumerate(issues):
         prev = issues[n - 1] if n else None
