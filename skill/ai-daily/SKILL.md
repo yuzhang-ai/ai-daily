@@ -20,7 +20,7 @@ python3 -I skill/ai-daily/scripts/collect.py
 - 先看「信源状态」表。传输、解析、条目数分开列：HTTP 200 但 0 条不是失败，也不是覆盖完整。失败超过一半时脚本会以非 0 退出：先排查网络，不要凭记忆写。
 - 候选池分三组：**窗口内**可以写；**待核实日期**要先打开原文确认发布时间在窗口内，确认不了就不发；**窗口外**只供参考。
 - 「官方链接」只表示链接指向官方域名，「来自官方渠道」只表示是从官方 RSS / 站点抓到的，两者都不等于读过原文。
-- 周一或节后可以加 `--hours 72`，把周末也纳入。复跑某一天用 `--now 2026-11-11T14:56:00Z` 固定采集截止。
+- 默认窗口 36 小时，日报每天出刊（含周末）时一直用默认值。只有上一期缺失（中间断了一天以上）才按断档加大：`--hours 72` 补一天，再多按每天加 24 算。周一本身不是加大窗口的理由，周末已经写过的事件会重新进候选池。复跑某一天用 `--now 2026-11-11T14:56:00Z` 固定采集截止。
 - 候选池的排序只反映被多少来源报道，不代表值得写。
 - 改过 `collect.py` 后先跑离线测试：`python3 -I skill/ai-daily/scripts/test_collect.py`。
 
@@ -34,13 +34,14 @@ python3 -I skill/ai-daily/scripts/collect.py
 4. 标「近 7 天已写」的事件，只有出现新的实质信息才再写。
 5. 「待核实日期」组里，凡是有官方链接、或来源文章时间在窗口内的，都要打开原文核日期，核实在窗口内就按正常候选处理。微信公众号、X 帖子这类拿不到 datePublished 的来源尤其如此；国内厂商的发布常常只有这两种渠道，不核就会整条漏掉。各类来源怎么拿时间，见 `references/research.md` 第一节。
 
-把结果写进 `work/triage-DATE.md`，一行一个事件：`事件 | 分数 | 要闻 / 快讯 / 淘汰 | 事件时间与来源 | 脉络（先行者 / 同类 / 上一版） | 一句理由`。维护者靠这张表复查选题。
+把结果写进 `logs/triage-DATE.md`，一张 markdown 表，一行一个事件，列固定为：`事件 | 分数 | 要闻 / 快讯 / 淘汰 | 事件时间与来源 | 脉络（先行者 / 同类 / 上一版） | 一句理由`。所有打过分的事件都要在表里，淘汰的也要，第一列写事件名（厂商 + 产品 + 动作）。这个文件随当期一起提交：维护者靠它复查选题，季度复核脚本靠它判断「候选池有但被淘汰」和「候选池里根本没有」。`work/` 下的候选池和运行日志仍不进仓库。
 
 ## 3. 核实
 
 对每条要闻和快讯，打开一手来源（官方博客、文档、论文、仓库）读全文。核实的具体方法（时间戳、厂商声明、HN 评论区、配图、仓库数据）在 `references/research.md`。
 
 - 价格、基准分数、参数量、日期这些数字，只用一手来源里出现的，并在 triage 表里记下每个数字对应的链接。橘鸦、Latent Space 和各家媒体只用来发现线索。
+- 厂商官方账号发的 X 帖子、微信公众号文章是一手来源（Qwen4 的官宣就只有这两个渠道），正文和时间按 `research.md` 第一节的方法读取。个人账号的爆料、转述、截图只算线索，不能作为事实来源。
 - 一手来源打不开时，用两家独立的可信媒体交叉核对。两家都找不到，就把这条降为快讯或者放弃，并在 triage 表里写明原因。RSS 摘要只能支持摘要里明确出现的事实，不等于读过全文；只有摘要、没有全文也没有两家媒体的，不能进要闻。
 - 厂商自己的评测要写清范围：在哪几个榜单、什么条件下领先，不把「三个榜单第一」写成「全面领先」。同一天同一模型如果有多份官方评测（例如发布稿和另一篇基准博客），都要读，结果不一致时把两边都写出来，并说明适用场景。
 - 开源项目用 GitHub API 查 star 数、许可证和创建时间：`curl -s https://api.github.com/repos/OWNER/REPO`。
@@ -65,8 +66,23 @@ python3 -I skill/ai-daily/scripts/collect.py
 - 快讯每条的标题（「机构 · 事件」）必须和正文第一句说的是同一件事；一篇来源里有多个发布时，按正文选的那个起标题。快讯不足 3 条时，回候选池「窗口内」组再找一遍，确实没有才如实少写。
 - 「关键数字」选这件事区别于同类的那个数字，不是发布稿里最大的那个。
 - 配图：纯色或渐变底上只有产品名的 og:image 不算配图，不放。优先找正文里的架构图、界面截图、对比图；没有就不写配图行。
+- 配图体积：单张不超过 300 KB，宽 1200–1600 px（原图更宽就缩到 1600），宽不足 800 的不用。示意图、截图存 PNG，照片存 JPG。仓库体积靠这条守住，不要为一张图提交几 MB。
 
 写完一条，用这个检验：把公司名遮住，读者能不能从正文判断出这是行业里的第几家、和前人差在哪。不能，就是只写了发布稿。
+
+### 英文稿
+
+中文稿定稿后，写 `outputs/en/AI-Daily-DATE.md`，**每期必做**，和中文稿同一个提交。字段名和结构见 `references/template.md` 的英文版一节。英文稿是翻译，不是重写：事实、数字、链接、配图、推荐指数和中文稿一致；中文稿里的本地文件链接（`sources/`）在英文稿里去掉。全部 26 期历史日报都有英文版，缺一期英文站就会出现「暂无英文版」。
+
+### 润色（可选）
+
+如果用别的工具或模型给中文稿做表述润色，先把原稿存一份到 `work/draft-DATE.md`。润色只能改措辞和段落组织，不能改事实、数字、链接、推荐指数、日期、含义。润色工具不可用时直接跳过，不等待，它不是发布的前置条件。润色后必须跑：
+
+```bash
+python3 -I skill/ai-daily/scripts/check_pair.py polish work/draft-DATE.md outputs/AI-Daily-DATE.md
+```
+
+有任何差异就整篇退回润色前的原稿。英文稿在润色之后再写。
 
 ## 5. 自检
 
@@ -75,25 +91,32 @@ grep -nE '作品集|面试|求职|我的项目|对你' outputs/AI-Daily-DATE.md
 ```
 
 ```bash
+python3 -I skill/ai-daily/scripts/check_pair.py en outputs/AI-Daily-DATE.md outputs/en/AI-Daily-DATE.md
+```
+
+```bash
 python3 -I site/build.py site/dist
 ```
 
 - 第一条命令应该没有输出。
-- 第二条命令必须构建成功，且输出的期数比上次多 1。
+- 第二条命令输出 `en: OK`，说明英文稿的要闻 / 快讯 / 开源数量、链接、星级、配图、Star 数和中文稿一致。
+- 第三条命令必须构建成功，且输出的期数比上次多 1，`N with English editions` 里的 N 等于总期数。
 - 每个数字都能在对应的来源链接里找到。
 - 推荐指数按 `selection.md` 的分数换算，不按当天排名给。平静的一天，三条都是 ★★★☆☆ 是正常的；一条 6 分的事件不因为它是今天最大的就写成 ★★★★★。
 - 每条要闻的「这意味着什么」都提到了至少一个先行者或同类产品，并给出了判断。
-- 3 条要闻来自不同的公司。例外只有一种：两件事互不相关，且都在 8 分以上。
+- 3 条要闻来自不同的公司。例外只有一种：两件事互不相关，且都在 8 分以上。这条只限要闻，快讯里同一家公司出现多条没有问题。
 
 ## 6. 提交
 
 ```bash
-git add outputs/AI-Daily-DATE.md outputs/images/DATE && git commit -m "AI Daily DATE" && git push
+git add outputs/AI-Daily-DATE.md outputs/en/AI-Daily-DATE.md outputs/images/DATE logs/triage-DATE.md && git commit -m "AI Daily DATE" && git push
 ```
 
-推送到 `main` 之后，GitHub Actions 会自动构建并发布网站。只提交 `outputs/` 下的新文件，`work/` 不进仓库。
+一期的提交恰好包含这四样：中文稿、英文稿、正文引用的配图、triage 表。推送到 `main` 之后，GitHub Actions 会自动构建并发布网站。`work/` 和 `site/dist/` 不进仓库。
 
-走 PR 的话，PR 描述必须包含：采集截止时间（北京时间）、`work/run-DATE.json` 里的信源状态表、`work/triage-DATE.md` 全文。这是维护者复查选题的唯一依据。PR 不自动合并，等维护者看过。
+走 PR 的话，PR 描述必须包含：采集截止时间（北京时间）、`work/run-DATE.json` 里的信源状态表、`logs/triage-DATE.md` 全文。PR 不自动合并，等维护者看过。
+
+提交前先 `git fetch` 刷新 `main`：当天的文件已经存在就停止，不覆盖、不重发。历史曾经重写过（2026-11-12 清理大文件），本地 clone 和远端对不上时删掉重新 clone，不要强推。
 
 ## 什么时候少写或不发
 
@@ -104,4 +127,4 @@ git add outputs/AI-Daily-DATE.md outputs/images/DATE && git commit -m "AI Daily 
 
 - 信源列表在 `scripts/collect.py` 的 `SOURCES` 里。某个信源连续 3 天失败，就修它的解析逻辑或者删掉它。改完跑 `test_collect.py`，并把 `RULES_VERSION` 改成当天日期。
 - 官方域名白名单在 `OFFICIAL_HOSTS` / `OFFICIAL_GH_ORGS`。新厂商第一次出现时加进去，不要靠字符串包含判断。
-- 选题标准在 `references/selection.md`。每个季度跑一次 `python3 -I skill/ai-daily/scripts/review_quarter.py --weeks 10`，按该文件第八节读 `work/review-DATE.md` 的结论，用产品君最近的周报复核一次。
+- 选题标准在 `references/selection.md`。每个季度跑一次 `python3 -I skill/ai-daily/scripts/review_quarter.py --weeks 10`，按该文件第八节读 `work/review-DATE.md` 的结论，用产品君最近的周报复核一次。脚本从 `logs/triage-*.md` 读每天的候选池，所以 triage 表必须每期提交。

@@ -9,7 +9,7 @@ SKILL.md 说的是每一步要做到什么；这份文件说的是具体怎么�
 | 来源类型 | 怎么拿 |
 |---|---|
 | 微信公众号文章 | 页面源码里有 `var ct = "<unix 时间戳>"`，就是发布时间。`curl -sL <url> \| grep -o 'var ct = "[0-9]*"'` |
-| X 帖子 | `https://cdn.syndication.twimg.com/tweet-result?id=<推文ID>&token=a` 返回 JSON，含 `created_at`、正文 `text`、图片 `mediaDetails[].media_url_https`，不用登录 |
+| X 帖子 | `https://cdn.syndication.twimg.com/tweet-result?id=<推文ID>&token=a` 返回 JSON，含 `created_at`、正文 `text`、图片 `mediaDetails[].media_url_https`，不用登录。厂商官方账号（`@Alibaba_Qwen`、`@OpenAI` 这类）的帖子是一手来源；个人账号的只算线索 |
 | GitHub 发布 | `https://api.github.com/repos/OWNER/REPO/releases` 的 `published_at`；仓库的 `created_at` 和 `pushed_at` 能区分「新仓库」和「老仓库刚公开」（AWS Emulator 9 月建仓、11 月发布） |
 | OpenAI | 博客页对 curl 返回 403，用 `https://developers.openai.com/api/docs/changelog`，公测、GA 都有日期 |
 | Anthropic | `https://www.anthropic.com/sitemap.xml` 的 `lastmod` 定位近期页面，再读页面 `datePublished` |
@@ -57,7 +57,7 @@ curl -s 'https://hn.algolia.com/api/v1/items/<帖子ID>'
 3. X 帖子的配图从第一节那个 syndication JSON 的 `mediaDetails` 里拿。
 4. 竖图（海报类）不用，横版槽位会裁掉。
 5. 示意图和截图存 PNG，网站对 PNG 整图等比缩放；照片存 JPG，按 1.9:1 裁切填满。
-6. 下载后用 `sips -g pixelWidth -g pixelHeight <file>` 看尺寸，宽小于 800 的不用。
+6. 下载后用 `sips -g pixelWidth -g pixelHeight <file>` 看尺寸，宽小于 800 的不用。宽超过 1600 的缩到 1600：`sips -Z 1600 <file>`。单张控制在 300 KB 以内，PNG 超了就先试 `sips -s format jpeg`（仅照片），示意图保持 PNG 改用更小的原图。
 
 ## 六、开源项目
 

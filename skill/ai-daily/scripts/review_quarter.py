@@ -121,10 +121,26 @@ def load_daily(outputs, since):
     return issues
 
 
-def load_candidates(work, since):
-    """Candidate titles per date from work/candidates-*.json, when present."""
+def load_candidates(repo, since):
+    """Candidate titles per date. Primary source: the committed triage tables
+    logs/triage-DATE.md (first column of every table row = event name). Local
+    work/candidates-DATE.json files are added when present."""
     cands = {}
-    for p in sorted(work.glob("candidates-*.json")):
+    for p in sorted((repo / "logs").glob("triage-*.md")):
+        d = dt.date.fromisoformat(re.search(r"\d{4}-\d{2}-\d{2}", p.name).group())
+        if d < since:
+            continue
+        rows = []
+        for line in p.read_text(encoding="utf-8").splitlines():
+            if not line.startswith("|"):
+                continue
+            first = line.strip("|").split("|")[0].strip()
+            if not first or set(first) <= set("-: ") or first in ("事件", "Event"):
+                continue
+            rows.append(first)
+        if rows:
+            cands.setdefault(d, []).extend(rows)
+    for p in sorted((repo / "work").glob("candidates-*.json")):
         d = dt.date.fromisoformat(re.search(r"\d{4}-\d{2}-\d{2}", p.name).group())
         if d < since:
             continue
@@ -132,7 +148,7 @@ def load_candidates(work, since):
             data = json.loads(p.read_text(encoding="utf-8"))
         except ValueError:
             continue
-        cands[d] = [c["title"] + " " + c.get("title_zh", "") for c in data.get("candidates", [])]
+        cands.setdefault(d, []).extend(c["title"] + " " + c.get("title_zh", "") for c in data.get("candidates", []))
     return cands
 
 
@@ -175,7 +191,7 @@ def main():
         sys.exit("no weekly reports fetched; Bilibili search may be rate-limiting, retry later")
     since = min(w["date"] for w in weeklies) - dt.timedelta(days=7)
     daily = load_daily(repo / "outputs", since)
-    cands = load_candidates(repo / "work", since)
+    cands = load_candidates(repo, since)
 
     rows, by_cat = [], {}
     for w in weeklies:
@@ -213,7 +229,7 @@ def main():
                      ("超过 30%：信源有缺口，去 `collect.py` 的 `SOURCES` 补。" if miss > 0.3 else "低于 30%，信源覆盖够用。"))
         lines.append(f"- 候选池有但被淘汰的 {counts['候选池有，被淘汰']} 条，逐条看下面的清单：如果有本该写的大事，回头看是哪一项打分偏低。")
     else:
-        lines.append("- 这段时间没有候选池记录（`work/` 不进仓库，或者日报当时还没用采集脚本），只能看「已写 / 未写」。")
+        lines.append("- 这段时间没有候选池记录（`logs/triage-DATE.md` 没提交，或者日报当时还没用采集脚本），只能看「已写 / 未写」。")
     lines += ["", "## 产品君的类别分布（对照 selection.md 第一节）", "", "| 类别 | 条数 | 占比 |", "|---|---|---|"]
     for c, v in sorted(by_cat.items(), key=lambda x: -x[1]):
         lines.append(f"| {c} | {v} | {v / n:.0%} |")
