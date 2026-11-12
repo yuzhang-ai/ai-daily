@@ -104,4 +104,4 @@ git add outputs/AI-Daily-DATE.md outputs/images/DATE && git commit -m "AI Daily 
 
 - 信源列表在 `scripts/collect.py` 的 `SOURCES` 里。某个信源连续 3 天失败，就修它的解析逻辑或者删掉它。改完跑 `test_collect.py`，并把 `RULES_VERSION` 改成当天日期。
 - 官方域名白名单在 `OFFICIAL_HOSTS` / `OFFICIAL_GH_ORGS`。新厂商第一次出现时加进去，不要靠字符串包含判断。
-- 选题标准在 `references/selection.md`。每个季度按该文件第八节的方法，用产品君最近的周报复核一次。
+- 选题标准在 `references/selection.md`。每个季度跑一次 `python3 -I skill/ai-daily/scripts/review_quarter.py --weeks 10`，按该文件第八节读 `work/review-DATE.md` 的结论，用产品君最近的周报复核一次。
