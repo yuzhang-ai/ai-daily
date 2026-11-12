@@ -47,6 +47,17 @@ code{font:.9em ui-monospace,Menlo,monospace;background:var(--violet-soft);color:
 .bar nav{display:flex;gap:26px;font-size:14px;color:var(--on-night-2)}
 .bar nav a{padding:6px 0;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
 .bar nav a:hover{color:#fff;border-color:var(--cyan)}
+/* language switch: text segments in the nav's own voice. Current language is lit; the other is a
+   plain link with the same hover as its neighbours. A hairline separates the two. */
+.bar nav .lang{display:inline-flex;align-items:center;gap:9px;margin-left:6px;font-size:14px;font-variant-numeric:tabular-nums}
+.bar nav .lang a,.bar nav .lang .on{padding:6px 0;border-bottom:1px solid transparent}
+.bar nav .lang .on{color:#fff}
+.bar nav .lang a{color:var(--on-night-3)}
+.bar nav .lang a:hover{color:#fff;border-color:var(--cyan)}
+.bar nav .lang i{width:1px;height:12px;background:rgba(255,255,255,.22)}
+.bar nav .lang [lang="zh-CN"]{letter-spacing:0}
+.notice{margin:8px auto 0;padding:10px 32px;font-size:13.5px;color:var(--ink-2);max-width:1120px}
+.notice::before{content:"";display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin:0 10px 2px 0}
 
 .hero{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:56px;align-items:center;padding:36px 32px 72px}
 .hero-cover{display:block;filter:drop-shadow(0 30px 40px rgba(0,0,0,.45))}

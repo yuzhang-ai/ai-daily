@@ -28,7 +28,7 @@
 2. …
 3. …
 
-**这意味着什么：** 对行业、产品或开发者的影响。可以有判断，但要能从上面的事实推出来。
+**这意味着什么：** 先定位，再判断。第一句说清这件事在哪条线上：谁先做的、之后谁跟进、今天这家补上了什么（例如「决策模型这条线由 TypeSafe 的 Jev 在 9 月开创，OpenAI 10 月跟进，Google 是第三家大厂，补上的是音视频和 PDF 输入」）。然后给判断：这个模式说明什么、谁受影响、接下来大概率发生什么。判断要能从上面的事实推出来，不能只复述发布稿的卖点。
 
 **风险与待验证：** 厂商自测未经独立验证、仅预览、限地区或套餐、价格会变等。
 
@@ -60,3 +60,50 @@
 - **封面色**（可选）：写调色板里的名字（靛蓝、珊瑚、青绿、紫罗兰、琥珀、墨绿、玫红、极光、橄榄、日落、石墨、海蓝），或 1–2 个色值，如 `封面色：#0f766e, #34d399`。不写就按期号轮换。
 - **配图**（可选）：优先用官方发布页的主图或 og:image，下载到 `outputs/images/YYYY-MM-DD/`，用相对路径引用，括号里写图源。AI 生成的图要写成 `（图源：AI 生成）`，并且不能画出产品界面、logo 或数据来冒充真实截图。找不到合适的图就不写这一行。
 - **关键数字**（可选）：竖线左边是数字（10 字以内），右边是说明（25 字以内）。数字必须能在来源链接里找到。
+
+## 英文版（可选）
+
+网站同时输出中文和英文两套页面，右上角可以切换。英文页面的界面文字由脚本翻译；正文需要一份英文稿 `outputs/en/AI-Daily-YYYY-MM-DD.md`。没有英文稿的那期，英文页面会显示中文原文并提示「暂无英文版」。
+
+英文稿结构与中文稿一致，用下面的标题和字段名（脚本按这些名字解析）：
+
+```markdown
+# AI Daily 2026-11-11
+
+## One-liner
+
+> …
+
+## Top stories
+
+### 1. Org: Title
+- Sources: [Official blog](https://…); [Docs](https://…)
+- Type: Model release / Product update / Open source / Research / Industry
+- Rating: ★★★★★
+- Summary: …
+- Image: ![Caption](images/2026-11-11/1-slug.jpg) (Image: Google)
+- Key figure: $2 | per million input tokens at launch
+
+**Why it matters:** …
+
+**Key points:**
+1. …
+
+**What it means:** …
+
+**Risks and open questions:** …
+
+## In brief
+
+1. **Org · Title**: … [Source](https://…)
+
+## Open source worth a look
+
+1. Project: owner/repo
+   GitHub: [owner/repo](https://github.com/owner/repo)
+   Stars: about 12k (2026-11-11)
+   What it solves: …
+   Why it's worth a look: …
+```
+
+英文稿是翻译，不是重写：事实、数字、链接、配图和推荐指数必须和中文稿一致。封面色跟随中文稿，英文稿里不用写。

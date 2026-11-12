@@ -50,6 +50,10 @@ SITES = [
     ("0din.ai", "odin", "0DIN"), ("thevelocitywhitepapers.com", "velocity", "Velocity"),
 ]
 GENERIC_LINK = {"来源", "原文", "链接", "source", "link"}
+# English display names for the SITES entries that carry Chinese words
+EN_SITES = {"OpenAI 开发者": "OpenAI Developers", "Claude 文档": "Claude Docs", "Google 博客": "Google Blog",
+            "Google 开发者博客": "Google Developers Blog", "Chrome 开发者": "Chrome Developers",
+            "Kimi 开放平台": "Kimi Platform"}
 LINK_SVG = ('<svg class="src-ico" viewBox="0 0 16 16" aria-hidden="true"><path fill="none" stroke="currentColor" '
             'stroke-width="1.6" stroke-linecap="round" d="M6.5 9.5l3-3M7 4.5l1-1a2.8 2.8 0 014 4l-1 1M9 11.5l-1 1a2.8 2.8 0 01-4-4l1-1"/></svg>')
 OUT_SVG = ('<svg class="src-out" viewBox="0 0 12 12" aria-hidden="true"><path fill="none" stroke="currentColor" '
@@ -65,21 +69,65 @@ STORY_KEYS = [("来源链接", "src"), ("类型", "type"), ("推荐指数", "sta
               ("配图", "img"), ("关键数字", "keynum"),
               ("一句话总结", "tldr"), ("为什么重要", "why"), ("核心观点", "points"),
               ("对 AI", "insight"), ("这意味着", "insight"), ("可落地", "action"), ("风险", "risk"),
-              ("是否值得精读", "worth")]
+              ("是否值得精读", "worth"),
+              # English companion files (outputs/en/) use these labels
+              ("Sources", "src"), ("Source", "src"), ("Type", "type"), ("Rating", "stars"),
+              ("Image", "img"), ("Key figure", "keynum"), ("Key number", "keynum"),
+              ("Summary", "tldr"), ("TL;DR", "tldr"), ("Why it matters", "why"), ("Key points", "points"),
+              ("What it means", "insight"), ("Risks", "risk"), ("Worth reading", "worth")]
 REPO_KEYS = [("项目名", "name"), ("GitHub 链接", "url"), ("Star 数", "star"),
-             ("解决什么问题", "what"), ("为什么值得", "why"), ("如何用到", "how")]
+             ("解决什么问题", "what"), ("为什么值得", "why"), ("如何用到", "how"),
+             ("Project", "name"), ("GitHub", "url"), ("Stars", "star"),
+             ("What it solves", "what"), ("Why it's worth", "why"), ("Why worth", "why"), ("How to use", "how")]
 # PUBLIC (default) renders the parts that matter to any AI follower; the markdown keeps the
 # author's own notes too (action items, repo how-tos, QA checklist), shown with AI_DAILY_PRIVATE=1.
 PUBLIC = os.environ.get("AI_DAILY_PRIVATE") != "1"
-SECTION_TITLES = ([("why", "为什么重要"), ("points", "核心观点"),
-                   ("insight", "这意味着什么"), ("risk", "风险与待验证")] if PUBLIC else
-                  [("why", "为什么重要"), ("points", "核心观点"),
-                   ("insight", "对 AI PM / FDE 的启发"), ("action", "可以动手做的事"),
-                   ("risk", "风险提醒")])
-TAGLINE = ("每天 3 条值得关注的 AI 动态，附观点、要点和风险提示" if PUBLIC
-           else "AI PM / FDE 的每日情报与行动清单")
-FOOT = ("内容由 AI 整理、人工核验来源链接；判断可能有误，请以原文为准。" if PUBLIC
-        else "给 AI 产品经理和 FDE 的每日情报。内容由 AI 整理、人工核验，转发前请点开原文确认。")
+# UI strings per language. Content comes from outputs/ (zh) and outputs/en/ (en, optional).
+L = {
+    "zh": {
+        "brand": "AI 每日简报", "html_lang": "zh-CN", "archive": "往期",
+        "tagline": "每天 3 条值得关注的 AI 动态，附观点、要点和风险提示" if PUBLIC else "AI PM / FDE 的每日情报与行动清单",
+        "foot": "内容由 AI 整理、人工核验来源链接；判断可能有误，请以原文为准。" if PUBLIC
+                else "给 AI 产品经理和 FDE 的每日情报。内容由 AI 整理、人工核验，转发前请点开原文确认。",
+        "sections": ([("why", "为什么重要"), ("points", "核心观点"), ("insight", "这意味着什么"), ("risk", "风险与待验证")]
+                     if PUBLIC else [("why", "为什么重要"), ("points", "核心观点"), ("insight", "对 AI PM / FDE 的启发"),
+                                     ("action", "可以动手做的事"), ("risk", "风险提醒")]),
+        "latest": "最新一期 · 第 {no} 期 · {date}", "issue": "第 {no} 期", "issue_date": "第 {no} 期 · {date}",
+        "month": "{y} 年 {m} 月", "count": "{n} 期", "sources": "原文", "briefs": "快讯",
+        "repos": "值得研究的开源项目", "actions": "明天可以做的事", "checks": "人工验证清单",
+        "prev": "上一期", "next": "下一期", "rating": "推荐 {n} / 5", "week": "一二三四五六日", "weekfmt": "周{w}",
+        "title": "第 {no} 期 · {date} · AI 每日简报",
+        "untranslated": "",
+    },
+    "en": {
+        "brand": "AI Daily Brief", "html_lang": "en", "archive": "Archive",
+        "tagline": "Three AI developments a day, with context, key facts and caveats" if PUBLIC
+                   else "Daily intelligence and action list for AI PMs / FDEs",
+        "foot": "Compiled by AI, source links checked by a human; judgments may be wrong, the original sources are authoritative." if PUBLIC
+                else "Daily intelligence for AI PMs and FDEs. Compiled by AI, checked by a human; open the originals before forwarding.",
+        "sections": ([("why", "Why it matters"), ("points", "Key points"), ("insight", "What it means"), ("risk", "Risks and open questions")]
+                     if PUBLIC else [("why", "Why it matters"), ("points", "Key points"), ("insight", "Takeaways for AI PMs / FDEs"),
+                                     ("action", "Things to try"), ("risk", "Risks")]),
+        "latest": "Latest · Issue {no} · {date}", "issue": "Issue {no}", "issue_date": "Issue {no} · {date}",
+        "month": "{mname} {y}", "count": "{n} issues", "sources": "Sources", "briefs": "In brief",
+        "repos": "Open source worth a look", "actions": "Things to try tomorrow", "checks": "Verification checklist",
+        "prev": "Previous", "next": "Next", "rating": "Rating {n} / 5", "week": "MonTueWedThuFriSatSun", "weekfmt": "{w}",
+        "title": "Issue {no} · {date} · AI Daily Brief",
+        "untranslated": "No English edition for this issue yet; showing the Chinese original.",
+    },
+}
+MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
+          "October", "November", "December"]
+LANG, BASE = "zh", ""      # set per output language in main(); BASE is the relative path to assets
+
+
+def t(key, **kw):
+    return L[LANG][key].format(**kw)
+
+
+def asset(p):
+    """Prefix relative asset paths with BASE; leave absolute URLs alone."""
+    return p if p.startswith(("http://", "https://", "/")) else BASE + p
 
 
 def field_re(keys):
@@ -201,25 +249,33 @@ def parse_issue(path):
     date = datetime.date.fromisoformat(re.search(r"\d{4}-\d{2}-\d{2}", path.name).group())
     issue = {"date": date, "stories": [], "repos": [], "lede": "", "actions": [], "checks": [],
              "briefs": []}
-    c = re.search(r"^封面色[：:]\s*(.+)$", text, flags=re.M)
+    c = re.search(r"^(?:封面色|Cover color)[：:]\s*(.+)$", text, flags=re.M)
     issue["color_raw"] = c.group(1) if c else ""
     for sec in re.split(r"^## ", text, flags=re.M)[1:]:
         name, _, body = sec.partition("\n")
-        if "快讯" in name:
+        low = name.lower()
+        if "快讯" in name or "in brief" in low or low.startswith("brief"):
             issue["briefs"] = [m.group(1) for m in re.finditer(r"^\d+\.\s+(.+)$", body, flags=re.M)]
-        elif "条内容" in name or "最值得关注" in name or "要闻" in name:
+        elif "条内容" in name or "最值得关注" in name or "要闻" in name or "stories" in low or "headlines" in low:
             issue["stories"] = [parse_story(b) for b in re.split(r"^### ", body, flags=re.M)[1:]]
-        elif "观点" in name or "一句话" in name:
+        elif "观点" in name or "一句话" in name or "one-liner" in low or "one liner" in low or "takeaway" in low:
             q = " ".join(l.lstrip("> ").strip() for l in body.splitlines() if l.startswith(">"))
             issue["lede"] = re.sub(r"^今天我最应该记住的是[：:]\s*", "", q)
-        elif "开源项目" in name:
+        elif "开源项目" in name or "open source" in low or "open-source" in low:
             issue["repos"] = parse_repos(body)
-        elif "行动" in name:
+        elif "行动" in name or "tomorrow" in low or "things to try" in low:
             issue["actions"] = [m.group(1) for m in re.finditer(r"^\d+\.\s+(.+)$", body, flags=re.M)]
-        elif "验证" in name:
+        elif "验证" in name or "checklist" in low:
             issue["checks"] = [(m.group(1) != " ", m.group(2)) for m in
                                re.finditer(r"^- \[([ xX])\]\s+(.+)$", body, flags=re.M)]
     return issue
+
+
+def content(i):
+    """The language edition to render: the English companion when building en and one exists."""
+    if LANG == "en" and i.get("en"):
+        return i["en"]
+    return i
 # ---------- rendering ----------
 esc = html.escape
 
@@ -270,8 +326,10 @@ def site_of(url):
 def src_chip(text, url):
     """A source link that reads as one: site icon + a name (the link text, or the site name if generic)."""
     icon, name = site_of(url)
+    if LANG == "en":
+        name = EN_SITES.get(name, name)
     label = name if text.strip().lower() in GENERIC_LINK else text
-    ico = (f'<img class="src-ico" src="icons/{icon}.png" alt="" width="16" height="16" loading="lazy">'
+    ico = (f'<img class="src-ico" src="{BASE}icons/{icon}.png" alt="" width="16" height="16" loading="lazy">'
            if icon else LINK_SVG)
     return f'<a class="src" href="{esc(url)}" title="{esc(name)}">{ico}<span>{esc(label)}</span>{OUT_SVG}</a>'
 
@@ -294,7 +352,7 @@ def plain(s):
 def stars(n):
     if not n:
         return ""
-    return f'<span class="stars" title="推荐 {n} / 5">{"★" * n}<i>{"★" * (5 - n)}</i></span>'
+    return f'<span class="stars" title="{t("rating", n=n)}">{"★" * n}<i>{"★" * (5 - n)}</i></span>'
 
 
 def ymd(i):
@@ -302,17 +360,19 @@ def ymd(i):
 
 
 def dot_date(i):
-    return f'{i["date"]:%Y.%m.%d} 周{WEEK[i["date"].weekday()]}'
+    w = L[LANG]["week"]
+    wd = w[i["date"].weekday()] if LANG == "zh" else w[i["date"].weekday() * 3:i["date"].weekday() * 3 + 3]
+    return f'{i["date"]:%Y.%m.%d} {t("weekfmt", w=wd)}'
 
 
 def cover(i, big=False):
     """A generated issue cover: brand strip, lead headline, two more headlines, issue badge."""
-    s = i["stories"]
+    s = content(i)["stories"]
     more = "".join(f"<li>{esc(plain(x['title']))}</li>" for x in s[1:3])
     a, b = i["colors"]
     return f'''<div class="cover{' big' if big else ''}" style="--cv-a:{a};--cv-b:{b};view-transition-name:cv-{ymd(i)}" aria-hidden="true">
   <div class="cv-panel">
-    <div class="cv-head"><span class="cv-brand">AI 每日简报</span><span class="cv-date">{i["date"]:%Y.%m.%d}</span></div>
+    <div class="cv-head"><span class="cv-brand">{t("brand")}</span><span class="cv-date">{i["date"]:%Y.%m.%d}</span></div>
     <p class="cv-lead">{esc(plain(s[0]["title"])) if s else ""}</p>
     <ul class="cv-more">{more}</ul>
   </div>
@@ -324,69 +384,89 @@ def heads(i, prefix=""):
     """Numbered headline list used in both hero and issue head; --i drives the stagger."""
     return "".join(f'''<li style="--i:{n}"><a href="{prefix}#s{n}">
   <span class="h-title">{esc(plain(s["title"]))}</span>{stars(s["stars"])}
-  <span class="h-tldr">{inline(s.get("tldr"))}</span></a></li>''' for n, s in enumerate(i["stories"], 1))
+  <span class="h-tldr">{inline(s.get("tldr"))}</span></a></li>''' for n, s in enumerate(content(i)["stories"], 1))
 
 
-def page(title, band, body, desc=""):
+def page(title, band, body, desc="", slug="index", notice=""):
+    other = f"en/{slug}.html" if LANG == "zh" else f"../{slug}.html"
+    alt_zh = f"{BASE}{slug}.html"
+    alt_en = f"{BASE}en/{slug}.html"
+    # language switch: two text segments like the rest of the nav; the current one is lit, the
+    # other is a link. Reads as "中 | EN", not as a button.
+    zh_seg = '<span class="on" lang="zh-CN">中</span>' if LANG == "zh" else f'<a href="{other}" hreflang="zh-CN" data-lang="zh" lang="zh-CN">中</a>'
+    en_seg = '<span class="on" lang="en">EN</span>' if LANG == "en" else f'<a href="{other}" hreflang="en" data-lang="en" lang="en">EN</a>'
+    switch = f'<span class="lang" role="group" aria-label="Language">{zh_seg}<i aria-hidden="true"></i>{en_seg}</span>'
     return f'''<!doctype html>
-<html lang="zh-CN">
+<html lang="{L[LANG]["html_lang"]}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>{esc(title)}</title>
 <meta name="description" content="{esc(desc)}">
 <meta name="theme-color" content="#0b0f2a">
-<link rel="preload" href="fonts/SmileySans-Oblique.ttf.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="style.css">
+<link rel="alternate" hreflang="zh-CN" href="{alt_zh}">
+<link rel="alternate" hreflang="en" href="{alt_en}">
+<link rel="preload" href="{BASE}fonts/SmileySans-Oblique.ttf.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="{BASE}style.css">
 </head>
 <body>
 <div class="band">
 <header class="bar"><div class="wrap bar-in">
-  <a class="logo" href="index.html">AI 每日简报</a>
-  <nav><a href="index.html#archive">往期</a><a href="{REPO_URL}">GitHub</a></nav>
+  <a class="logo" href="index.html">{t("brand")}</a>
+  <nav><a href="index.html#archive">{t("archive")}</a><a href="{REPO_URL}">GitHub</a>{switch}</nav>
 </div></header>
 {band}
 </div>
 <div class="band-fade" aria-hidden="true"></div>
+{f'<p class="notice wrap">{esc(notice)}</p>' if notice else ""}
 {body}
-<footer class="site-foot"><div class="wrap">{FOOT}</div></footer>
+<footer class="site-foot"><div class="wrap">{t("foot")}</div></footer>
+<script>
+(function(){{var k="ai-daily-lang",here="{LANG}",a=document.querySelector(".lang a");if(!a)return;
+try{{var s=localStorage.getItem(k);
+if(s&&s!==here&&location.pathname.replace(/.*\\//,"")in{{"index.html":1,"":1}}&&!sessionStorage.getItem("ai-daily-switched")){{sessionStorage.setItem("ai-daily-switched","1");location.replace(a.href);return;}}
+a.addEventListener("click",function(){{localStorage.setItem(k,a.dataset.lang);sessionStorage.setItem("ai-daily-switched","1");}});}}catch(e){{}}}})();
+</script>
 </body>
 </html>'''
 
 
 def render_index(issues):
     latest = issues[-1]
+    lc = content(latest)
     hero = f'''<section class="hero wrap">
   <a class="hero-cover" href="{ymd(latest)}.html">{cover(latest, big=True)}</a>
   <div class="hero-text">
-    <p class="kicker" style="--i:0">{TAGLINE}</p>
-    <p class="kicker sub" style="--i:0">最新一期 · 第 {latest["no"]} 期 · {dot_date(latest)}</p>
-    <h1 class="hero-lede" style="--i:1"><a href="{ymd(latest)}.html">{esc(plain(latest["lede"]))}</a></h1>
+    <p class="kicker" style="--i:0">{t("tagline")}</p>
+    <p class="kicker sub" style="--i:0">{t("latest", no=latest["no"], date=dot_date(latest))}</p>
+    <h1 class="hero-lede" style="--i:1"><a href="{ymd(latest)}.html">{esc(plain(lc["lede"]))}</a></h1>
     <ol class="hero-heads" style="--i:2">{heads(latest, ymd(latest) + ".html")}</ol>
   </div>
 </section>'''
     months = {}
     for i in reversed(issues[:-1]):
-        months.setdefault(f'{i["date"].year} 年 {i["date"].month} 月', []).append(i)
+        key = t("month", y=i["date"].year, m=i["date"].month, mname=MONTHS[i["date"].month - 1])
+        months.setdefault(key, []).append(i)
     grid = []
     for m, items in months.items():
         cards = "".join(f'''<a class="card" href="{ymd(i)}.html">{cover(i)}
-  <span class="card-date">第 {i["no"]} 期 · {dot_date(i)}</span>
-  <span class="card-lede">{esc(plain(i["lede"]))}</span></a>''' for i in items)
-        grid.append(f'<h2 class="month">{m}<span>{len(items)} 期</span></h2><div class="grid">{cards}</div>')
+  <span class="card-date">{t("issue_date", no=i["no"], date=dot_date(i))}</span>
+  <span class="card-lede">{esc(plain(content(i)["lede"]))}</span></a>''' for i in items)
+        grid.append(f'<h2 class="month">{m}<span>{t("count", n=len(items))}</span></h2><div class="grid">{cards}</div>')
     body = f'<main class="archive wrap" id="archive">{"".join(grid)}</main>'
-    return page("AI 每日简报", hero, body, plain(latest["lede"]))
+    return page(t("brand"), hero, body, plain(lc["lede"]))
 
 
 def render_issue(i, prev, nxt):
+    c = content(i)
     stories = []
-    for n, s in enumerate(i["stories"], 1):
-        src = "".join(src_chip(t, u) for t, u in s["links"])
+    for n, s in enumerate(c["stories"], 1):
+        src = "".join(src_chip(tx, u) for tx, u in s["links"])
         parts = "".join(f'<section class="part"><h3>{label}</h3>{blocks(s[k])}</section>'
-                        for k, label in SECTION_TITLES if s.get(k))
+                        for k, label in L[LANG]["sections"] if s.get(k))
         org = f'<span class="org">{esc(s["org"])}</span>' if s["org"] else ""
         img = s.get("image")
-        fig = (f'''<figure class="story-img"><img src="{esc(img["src"])}" alt="{esc(img["alt"])}" loading="lazy" decoding="async">
+        fig = (f'''<figure class="story-img"><img src="{esc(asset(img["src"]))}" alt="{esc(img["alt"])}" loading="lazy" decoding="async">
   {f'<figcaption>{esc(img["credit"])}</figcaption>' if img["credit"] else ""}</figure>''' if img else "")
         stat = s.get("stat")
         stat_html = (f'<p class="stat"><b>{esc(stat[0])}</b><span>{esc(stat[1])}</span></p>' if stat else "")
@@ -399,48 +479,53 @@ def render_issue(i, prev, nxt):
   </header>
   <div class="lead-row">{stat_html}<p class="tldr">{inline(s.get("tldr"))}</p></div>
   {parts}
-  <p class="sources"><span class="src-label">原文</span>{src}</p>
+  <p class="sources"><span class="src-label">{t("sources")}</span>{src}</p>
 </article>''')
     repos = "".join(f'''<a class="repo" href="{esc(r["href"])}">
   <span class="repo-name">{GH_SVG}<span>{esc(r["name"]).replace("/", "/<wbr>")}</span></span><span class="repo-star">{esc(r.get("star", ""))}</span>
   <span class="repo-what">{inline(r.get("what"))}</span>
-  {f'<span class="repo-how">{inline(r.get("why" if PUBLIC else "how"))}</span>' if r.get("why" if PUBLIC else "how") else ""}</a>''' for r in i["repos"])
-    acts = "".join(f"<li>{inline(a)}</li>" for a in i["actions"])
-    briefs = "".join(brief(b) for b in i["briefs"])
-    checks = "".join(f'<li class="{"ok" if ok else "todo"}">{inline(t)}</li>' for ok, t in i["checks"])
+  {f'<span class="repo-how">{inline(r.get("why" if PUBLIC else "how"))}</span>' if r.get("why" if PUBLIC else "how") else ""}</a>''' for r in c["repos"])
+    acts = "".join(f"<li>{inline(a)}</li>" for a in c["actions"])
+    briefs = "".join(brief(b) for b in c["briefs"])
+    checks = "".join(f'<li class="{"ok" if ok else "todo"}">{inline(tx)}</li>' for ok, tx in c["checks"])
     def pg(x, cls, label):
         if not x:
             return "<span></span>"
         return f'''<a class="pg {cls}" href="{ymd(x)}.html"><span class="pg-label">{label}</span>{cover(x)}
-  <span class="card-date">第 {x["no"]} 期 · {dot_date(x)}</span>
-  <span class="card-lede">{esc(plain(x["lede"]))}</span></a>'''
-    nav = pg(prev, "prev", "上一期") + pg(nxt, "next", "下一期")
+  <span class="card-date">{t("issue_date", no=x["no"], date=dot_date(x))}</span>
+  <span class="card-lede">{esc(plain(content(x)["lede"]))}</span></a>'''
+    nav = pg(prev, "prev", t("prev")) + pg(nxt, "next", t("next"))
     band = f'''<header class="issue-head wrap">
     {cover(i, big=True)}
     <div class="issue-intro">
-      <p class="kicker" style="--i:0">第 {i["no"]} 期 · {dot_date(i)}</p>
-      <h1 style="--i:1">{esc(plain(i["lede"]))}</h1>
+      <p class="kicker" style="--i:0">{t("issue_date", no=i["no"], date=dot_date(i))}</p>
+      <h1 style="--i:1">{esc(plain(c["lede"]))}</h1>
       <ol class="hero-heads" style="--i:2">{heads(i)}</ol>
     </div>
   </header>'''
     body = f'''<main class="issue wrap">
   {"".join(stories)}
-  {f'<section class="block"><h2>快讯</h2><ol class="briefs">{briefs}</ol></section>' if briefs else ""}
-  {f'<section class="block"><h2>值得研究的开源项目<span class="h-tag">{GH_SVG}GitHub</span></h2><div class="repos">{repos}</div></section>' if repos else ""}
-  {f'<section class="block"><h2>明天可以做的事</h2><ol class="actions">{acts}</ol></section>' if acts and not PUBLIC else ""}
-  {f'<details class="checks"><summary>人工验证清单</summary><ul>{checks}</ul></details>' if checks and not PUBLIC else ""}
+  {f'<section class="block"><h2>{t("briefs")}</h2><ol class="briefs">{briefs}</ol></section>' if briefs else ""}
+  {f'<section class="block"><h2>{t("repos")}<span class="h-tag">{GH_SVG}GitHub</span></h2><div class="repos">{repos}</div></section>' if repos else ""}
+  {f'<section class="block"><h2>{t("actions")}</h2><ol class="actions">{acts}</ol></section>' if acts and not PUBLIC else ""}
+  {f'<details class="checks"><summary>{t("checks")}</summary><ul>{checks}</ul></details>' if checks and not PUBLIC else ""}
   <nav class="pager">{nav}</nav>
 </main>'''
-    return page(f'第 {i["no"]} 期 · {dot_date(i)} · AI 每日简报', band, body, plain(i["lede"]))
+    notice = t("untranslated") if LANG == "en" and not i.get("en") else ""
+    return page(t("title", no=i["no"], date=dot_date(i)), band, body, plain(c["lede"]), slug=ymd(i), notice=notice)
 
 
 def main():
+    global LANG, BASE
     issues = sorted((parse_issue(p) for p in SRC.glob("AI-Daily-*.md")), key=lambda i: i["date"])
     if not issues:
         sys.exit(f"no issues found in {SRC}")
     for n, i in enumerate(issues, 1):
         i["no"] = n
         i["colors"] = cover_colors(i["color_raw"], n)
+        en = SRC / "en" / f"AI-Daily-{ymd(i)}.md"
+        if en.is_file():
+            i["en"] = parse_issue(en)
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
@@ -449,12 +534,15 @@ def main():
         (shutil.copytree if src.is_dir() else shutil.copy2)(src, OUT / a)
     if (SRC / "images").is_dir():
         shutil.copytree(SRC / "images", OUT / "images")
-    (OUT / "index.html").write_text(render_index(issues), encoding="utf-8")
-    for n, i in enumerate(issues):
-        prev = issues[n - 1] if n else None
-        nxt = issues[n + 1] if n + 1 < len(issues) else None
-        (OUT / f"{ymd(i)}.html").write_text(render_issue(i, prev, nxt), encoding="utf-8")
-    print(f"built {len(issues)} issues -> {OUT}")
+    for LANG, BASE, out in (("zh", "", OUT), ("en", "../", OUT / "en")):
+        out.mkdir(exist_ok=True)
+        (out / "index.html").write_text(render_index(issues), encoding="utf-8")
+        for n, i in enumerate(issues):
+            prev = issues[n - 1] if n else None
+            nxt = issues[n + 1] if n + 1 < len(issues) else None
+            (out / f"{ymd(i)}.html").write_text(render_issue(i, prev, nxt), encoding="utf-8")
+    n_en = sum(1 for i in issues if i.get("en"))
+    print(f"built {len(issues)} issues (zh + en, {n_en} with English editions) -> {OUT}")
 
 
 if __name__ == "__main__":

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?><rss xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/" xmlns:atom="http://www.w3.org/2005/Atom" version="2.0">
+    <channel>
+        <title><![CDATA[OpenAI News]]></title>
+        <description><![CDATA[The OpenAI blog]]></description>
+        <link>https://openai.com/news</link>
+        <image>
+            <url>https://openai.com/apple-icon.png</url>
+            <title>OpenAI News</title>
+            <link>https://openai.com/news</link>
+        </image>
+        <generator>OpenAI</generator>
+        <lastBuildDate>Wed, 11 Nov 2026 23:15:57 GMT</lastBuildDate>
+        <atom:link href="https://openai.com/news/rss.xml" rel="self" type="application/rss+xml"/>
+        <language><![CDATA[en-US]]></language>
+        <item>
+            <title><![CDATA[Gilbert + Tobin rethinks the business of law with AI]]></title>
+            <description><![CDATA[A conversation with Sam Nickless, Partner and Chief Executive Officer at Gilbert + Tobin.]]></description>
+            <link>https://openai.com/index/gilbert-tobin-sam-nickless</link>
+            <guid isPermaLink="true">https://openai.com/index/gilbert-tobin-sam-nickless</guid>
+            <pubDate>Thu, 12 Nov 2026 00:00:00 GMT</pubDate>
+        </item><item>
+            <title><![CDATA[ChatGPT Plus for veterans and servicemembers]]></title>
+            <description><![CDATA[More than 20,000 veterans and transitioning service members have claimed a free year of ChatGPT Plus. See how they use it to prepare for civilian careers.]]></description>
+            <link>https://openai.com/index/chatgpt-plus-for-veterans</link>
+            <guid isPermaLink="true">https://openai.com/index/chatgpt-plus-for-veterans</guid>
+            <category><![CDATA[Company]]></category>
+            <pubDate>Wed, 11 Nov 2026 08:00:00 GMT</pubDate>
+        </item><item>
+            <title><![CDATA[JioStar’s chief architect on AI discovery at 500M-user scale]]></title>
+            <description><![CDATA[JioStar’s Vijay Seshadri explains AI discovery at 500M-user scale. Read his lessons on evals, guardrails, and taking AI into production.]]></description>
+            <link>https://openai.com/index/jiostar-vijay-seshadri</link>
+            <guid isPermaLink="true">https://openai.com/index/jiostar-vijay-seshadri</guid>
+            <pubDate>Wed, 11 Nov 2026 00:00:00 GMT</pubDate>
+        </item><item>
+            <title><![CDATA[Helping caregivers use AI in everyday life]]></title>
+            <description><![CDATA[OpenAI Academy is bringing free, hands-on ChatGPT workshops to caregivers in five U.S. cities, helping them build practical AI skills for everyday life.]]></description>
+            <link>https://openai.com/index/helping-caregivers-use-ai-in-everyday-life</link>
+            <guid isPermaLink="true">https://openai.com/index/helping-caregivers-use-ai-in-everyday-life</guid>
+            <category><![CDATA[Company]]></category>
+            <pubDate>Tue, 10 Nov 2026 12:00:00 GMT</pubDate>
+        </item><item>
+            <title><![CDATA[Introducing Businesses in ChatGPT]]></title>
+            <description><![CDATA[Manage your business information, get insights about how your business shows up, and turn interest into action in ChatGPT.]]></description>
+            <link>https://openai.com/index/introducing-businesses-chatgpt</link>
+            <guid isPermaLink="true">https://openai.com/index/introducing-businesses-chatgpt</guid>
+            <category><![CDATA[Product]]></category>
+            <pubDate>Tue, 10 Nov 2026 10:00:00 GMT</pubDate>
+        </item><item>
+            <title><![CDATA[Closing the AI guidance gap in education]]></title>
+            <description><![CDATA[New ThinkYoung research and lessons from OpenAI’s EMEA education partnerships on supporting teachers, AI literacy, and independent learning.]]></description>
+            <link>https://openai.com/index/closing-ai-guidance-gap-education</link>
+            <guid isPermaLink="true">https://openai.com/index/closing-ai-guidance-gap-education</guid>
+            <category><![CDATA[Company]]></category>
+            <pubDate>Tue, 10 Nov 2026 09:00:00 GMT</pubDate>
+        </item>
+    </channel>
+</rss>
