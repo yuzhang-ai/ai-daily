@@ -187,7 +187,9 @@ IMG_RE = re.compile(r"!\[([^\]]*)\]\(([^)\s]+)\)\s*(?:[（(]([^）)]*)[）)])?")
 
 
 def parse_image(s):
-    """`![alt](images/DATE/x.jpg)（图源：Google）` -> {src, alt, credit}; local paths are relative to outputs/."""
+    """`![alt](images/DATE/x.jpg)（图源：Google）` -> {src, alt, credit, fit}; local paths are relative to outputs/.
+    fit=True (letterbox, never crop) when the credit says 不裁剪 / diagram / screenshot, or the file is a
+    PNG — diagrams and screenshots are almost always PNG, photos and key art are JPEG."""
     m = IMG_RE.search(s or "")
     if not m:
         return None
@@ -197,7 +199,10 @@ def parse_image(s):
         if ".." in src or not (SRC / src).is_file():
             print(f"warning: image not found, skipped: {m.group(2)}", file=sys.stderr)
             return None
-    return {"src": src, "alt": m.group(1).strip(), "credit": (m.group(3) or "").strip()}
+    credit = (m.group(3) or "").strip()
+    fit = bool(re.search(r"不裁剪|示意图|架构图|截图|diagram|screenshot", credit)) or src.lower().endswith(".png")
+    credit = re.sub(r"[，,、\s]*(不裁剪)\s*$", "", credit)
+    return {"src": src, "alt": m.group(1).strip(), "credit": credit, "fit": fit}
 
 
 def parse_stat(s):
@@ -229,7 +234,7 @@ def parse_repos(text):
     for line in text.splitlines():
         h = re.match(r"^###\s+(.+)$", line)
         m = REPO_RE.match(line)
-        if h or (m and m.group(1) == "项目名"):
+        if h or (m and m.group(1) in ("项目名", "Project")):
             cur = {"name": (h.group(1) if h else m.group(2)).strip(), "_lines": []}
             repos.append(cur)
         elif cur is not None:
@@ -431,8 +436,15 @@ a.addEventListener("click",function(){{localStorage.setItem(k,a.dataset.lang);se
 </html>'''
 
 
+def has_edition(i):
+    """True when the issue has content in the language being built."""
+    return LANG == "zh" or bool(i.get("en"))
+
+
 def render_index(issues):
-    latest = issues[-1]
+    # On the English site the hero is the newest issue that actually has an English edition;
+    # issues without one still appear in the archive, marked ZH, so the count stays honest.
+    latest = next((i for i in reversed(issues) if has_edition(i)), issues[-1])
     lc = content(latest)
     hero = f'''<section class="hero wrap">
   <a class="hero-cover" href="{ymd(latest)}.html">{cover(latest, big=True)}</a>
@@ -444,13 +456,13 @@ def render_index(issues):
   </div>
 </section>'''
     months = {}
-    for i in reversed(issues[:-1]):
+    for i in reversed([x for x in issues if x is not latest]):
         key = t("month", y=i["date"].year, m=i["date"].month, mname=MONTHS[i["date"].month - 1])
         months.setdefault(key, []).append(i)
     grid = []
     for m, items in months.items():
-        cards = "".join(f'''<a class="card" href="{ymd(i)}.html">{cover(i)}
-  <span class="card-date">{t("issue_date", no=i["no"], date=dot_date(i))}</span>
+        cards = "".join(f'''<a class="card{'' if has_edition(i) else ' zh-only'}" href="{ymd(i)}.html">{cover(i)}
+  <span class="card-date">{t("issue_date", no=i["no"], date=dot_date(i))}{'' if has_edition(i) else f'<span class="badge" title="{esc(t("untranslated"))}">ZH</span>'}</span>
   <span class="card-lede">{esc(plain(content(i)["lede"]))}</span></a>''' for i in items)
         grid.append(f'<h2 class="month">{m}<span>{t("count", n=len(items))}</span></h2><div class="grid">{cards}</div>')
     body = f'<main class="archive wrap" id="archive">{"".join(grid)}</main>'
@@ -466,7 +478,7 @@ def render_issue(i, prev, nxt):
                         for k, label in L[LANG]["sections"] if s.get(k))
         org = f'<span class="org">{esc(s["org"])}</span>' if s["org"] else ""
         img = s.get("image")
-        fig = (f'''<figure class="story-img"><img src="{esc(asset(img["src"]))}" alt="{esc(img["alt"])}" loading="lazy" decoding="async">
+        fig = (f'''<figure class="story-img{' fit' if img.get('fit') else ''}"><img src="{esc(asset(img["src"]))}" alt="{esc(img["alt"])}" loading="lazy" decoding="async">
   {f'<figcaption>{esc(img["credit"])}</figcaption>' if img["credit"] else ""}</figure>''' if img else "")
         stat = s.get("stat")
         stat_html = (f'<p class="stat"><b>{esc(stat[0])}</b><span>{esc(stat[1])}</span></p>' if stat else "")
