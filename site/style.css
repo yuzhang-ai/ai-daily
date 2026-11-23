@@ -42,7 +42,7 @@ code{font:.9em ui-monospace,Menlo,monospace;background:var(--violet-soft);color:
 .band-fade::before{content:"";position:absolute;inset:0;
   background:radial-gradient(60% 120% at 20% 0%,rgba(111,92,255,.28),transparent 70%),radial-gradient(50% 100% at 85% 0%,rgba(57,210,255,.18),transparent 70%)}
 .band+.band-fade+main>:first-child{margin-top:0}
-.bar-in{display:flex;align-items:center;justify-content:space-between;height:68px}
+.bar-in{display:flex;align-items:center;justify-content:space-between;height:68px;column-gap:16px}
 .logo{font:30px/1 var(--display);letter-spacing:.02em;color:#fff}
 .bar nav{display:flex;gap:26px;font-size:14px;color:var(--on-night-2)}
 .bar nav a{padding:6px 0;border-bottom:1px solid transparent;transition:color .15s,border-color .15s}
@@ -224,6 +224,32 @@ code{font:.9em ui-monospace,Menlo,monospace;background:var(--violet-soft);color:
 .pg:hover .card-lede{color:var(--violet)}
 .site-foot{padding:32px 0 56px;font-size:13px;color:var(--ink-3);text-align:center}
 
+/* ---------- weekly: a separate article, not a numbered issue ---------- */
+.weekly-head{grid-template-columns:minmax(0,760px)}
+.weekly-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,320px),1fr));gap:16px}
+.weekly-card{display:flex;flex-direction:column;align-items:flex-start;max-width:640px;background:var(--paper);border-radius:var(--r-card);padding:22px 24px 18px 28px;position:relative;overflow:hidden;
+  box-shadow:0 1px 2px rgba(16,18,43,.04),0 12px 32px -20px rgba(16,18,43,.18);transition:transform .25s var(--ease)}
+.weekly-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--cyan),var(--violet))}
+.weekly-card:hover{transform:translateY(-4px)}
+.weekly-card:hover .weekly-title{color:var(--violet)}
+.weekly-mark{display:inline-block;margin-bottom:8px;padding:1px 8px;border-radius:999px;background:var(--violet-soft);color:#3f2fb8;font:600 12px/1.7 var(--sans);letter-spacing:.06em}
+.weekly-title{display:block;font:600 18px/1.45 var(--sans)}
+.weekly-card .card-date{margin-top:10px}
+.weekly-card .card-lede{margin-top:4px}
+.weekly-body{background:var(--paper);border-radius:var(--r-card);padding:34px 40px;margin-top:28px;overflow-wrap:anywhere;
+  box-shadow:0 1px 2px rgba(16,18,43,.04),0 12px 32px -20px rgba(16,18,43,.18)}
+.weekly-body h2{margin:28px 0 10px;font:600 21px/1.4 var(--sans)}
+.weekly-body h3{margin:22px 0 8px;font:600 16.5px/1.45 var(--sans)}
+.weekly-body p{margin:0 0 12px}
+.weekly-body hr{border:0;border-top:1px dashed var(--line);margin:28px 0}
+.weekly-body ul{margin:0 0 12px;padding-left:1.3em}
+.weekly-body li{margin:6px 0}
+.weekly-body a{color:var(--violet);text-decoration:underline;text-decoration-color:rgba(111,92,255,.35);text-underline-offset:3px}
+.weekly-body a:hover{text-decoration-color:var(--violet)}
+.weekly-back{margin:36px 0 0}
+.weekly-back a{color:var(--violet);font-weight:600}
+.weekly-back a:hover{text-decoration:underline;text-underline-offset:3px}
+
 /* shared-element cover → issue page (progressive) */
 @view-transition{navigation:auto}
 ::view-transition-old(root),::view-transition-new(root){animation-duration:.22s}
@@ -234,12 +260,15 @@ code{font:.9em ui-monospace,Menlo,monospace;background:var(--violet-soft);color:
   .hero-cover,.issue-head .cover{max-width:520px}
   .hero-lede,.issue-intro h1{font-size:23px}
   .story{padding:26px 22px}.story-no{font-size:34px}
+  .weekly-body{padding:26px 22px}
   .story-img{margin:-26px -22px 22px}
   .band-fade{height:72px}
 }
 @media (max-width:520px){
   .wrap,.hero,.archive,.issue-head{padding-left:16px;padding-right:16px}
-  .bar-in{height:60px}.logo{font-size:24px}
+  .bar-in{height:auto;min-height:60px;flex-wrap:wrap;row-gap:4px;column-gap:16px;padding-top:8px;padding-bottom:8px}.logo{font-size:24px}
+  .bar nav{gap:14px;flex-wrap:wrap}
+  .weekly-body{padding:22px 16px}
   .grid{grid-template-columns:1fr 1fr;gap:20px 12px}
   .card-lede{font-size:13.5px}
   .lead-row{flex-direction:column}.stat{width:auto;flex-direction:row;align-items:baseline;gap:10px}
@@ -249,5 +278,5 @@ code{font:.9em ui-monospace,Menlo,monospace;background:var(--violet-soft);color:
 }
 @media (prefers-reduced-motion:reduce){
   *{animation:none!important;transition:none!important;scroll-behavior:auto}
-  .card:hover,.repo:hover,.pg:hover,.hero-heads a:hover{transform:none}
+  .card:hover,.repo:hover,.pg:hover,.hero-heads a:hover,.weekly-card:hover{transform:none}
 }
