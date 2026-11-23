@@ -98,6 +98,8 @@ L = {
         "prev": "上一期", "next": "下一期", "rating": "推荐 {n} / 5", "week": "一二三四五六日", "weekfmt": "周{w}",
         "title": "第 {no} 期 · {date} · AI 每日简报",
         "untranslated": "",
+        "weekly": "周报", "weekly_back": "返回周报",
+        "untranslated_weekly": "这篇周报还没有英文版，下面显示中文原文。",
     },
     "en": {
         "brand": "AI Daily Brief", "html_lang": "en", "archive": "Archive",
@@ -114,11 +116,15 @@ L = {
         "prev": "Previous", "next": "Next", "rating": "Rating {n} / 5", "week": "MonTueWedThuFriSatSun", "weekfmt": "{w}",
         "title": "Issue {no} · {date} · AI Daily Brief",
         "untranslated": "No English edition for this issue yet; showing the Chinese original.",
+        "weekly": "Weekly", "weekly_back": "Back to weeklies",
+        "untranslated_weekly": "No English edition for this weekly yet; showing the Chinese original.",
     },
 }
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September",
           "October", "November", "December"]
 LANG, BASE = "zh", ""      # set per output language in main(); BASE is the relative path to assets
+SHOW_WEEKLY = False        # set in main() when outputs/weekly/ has an edition
+WEEKLY_ZH = re.compile(r"^(\d{4}-\d{2}-\d{2})\.zh\.md$")
 
 
 def t(key, **kw):
@@ -364,10 +370,14 @@ def ymd(i):
     return i["date"].isoformat()
 
 
-def dot_date(i):
+def fmt_date(date):
     w = L[LANG]["week"]
-    wd = w[i["date"].weekday()] if LANG == "zh" else w[i["date"].weekday() * 3:i["date"].weekday() * 3 + 3]
-    return f'{i["date"]:%Y.%m.%d} {t("weekfmt", w=wd)}'
+    wd = w[date.weekday()] if LANG == "zh" else w[date.weekday() * 3:date.weekday() * 3 + 3]
+    return f"{date:%Y.%m.%d} {t('weekfmt', w=wd)}"
+
+
+def dot_date(i):
+    return fmt_date(i["date"])
 
 
 def cover(i, big=False):
@@ -401,6 +411,7 @@ def page(title, band, body, desc="", slug="index", notice=""):
     zh_seg = '<span class="on" lang="zh-CN">中</span>' if LANG == "zh" else f'<a href="{other}" hreflang="zh-CN" data-lang="zh" lang="zh-CN">中</a>'
     en_seg = '<span class="on" lang="en">EN</span>' if LANG == "en" else f'<a href="{other}" hreflang="en" data-lang="en" lang="en">EN</a>'
     switch = f'<span class="lang" role="group" aria-label="Language">{zh_seg}<i aria-hidden="true"></i>{en_seg}</span>'
+    weekly_href = "#weekly" if slug == "index" else "index.html#weekly"
     return f'''<!doctype html>
 <html lang="{L[LANG]["html_lang"]}">
 <head>
@@ -418,7 +429,7 @@ def page(title, band, body, desc="", slug="index", notice=""):
 <div class="band">
 <header class="bar"><div class="wrap bar-in">
   <a class="logo" href="index.html">{t("brand")}</a>
-  <nav><a href="index.html#archive">{t("archive")}</a><a href="{REPO_URL}">GitHub</a>{switch}</nav>
+  <nav><a href="index.html#archive">{t("archive")}</a>{f'<a href="{weekly_href}">{t("weekly")}</a>' if SHOW_WEEKLY else ""}<a href="{REPO_URL}">GitHub</a>{switch}</nav>
 </div></header>
 {band}
 </div>
@@ -441,7 +452,169 @@ def has_edition(i):
     return LANG == "zh" or bool(i.get("en"))
 
 
-def render_index(issues):
+WEEKLY_TOKEN = re.compile(
+    r"\[([^\]]+)\]\((https?://[^)\s]+)\)"
+    r"|`([^`]+)`"
+    r"|\*\*([^*]+)\*\*"
+    r"|(?<!\*)\*([^*\n]+)\*(?!\*)"
+)
+
+
+def weekly_inline(s):
+    """Render inline markdown. URLs and numbers are copied through, not rewritten."""
+    parts, pos = [], 0
+    for m in WEEKLY_TOKEN.finditer(s or ""):
+        parts.append(esc(s[pos:m.start()], quote=False))
+        if m.group(1) is not None:
+            parts.append(f'<a href="{esc(m.group(2))}">{esc(m.group(1), quote=False)}</a>')
+        elif m.group(3) is not None:
+            parts.append(f"<code>{esc(m.group(3), quote=False)}</code>")
+        elif m.group(4) is not None:
+            parts.append(f"<strong>{esc(m.group(4), quote=False)}</strong>")
+        else:
+            parts.append(f"<em>{esc(m.group(5), quote=False)}</em>")
+        pos = m.end()
+    parts.append(esc((s or "")[pos:], quote=False))
+    return "".join(parts)
+
+
+def render_markdown(text):
+    """Small markdown subset used by weekly articles: headings, lists, rules, paragraphs."""
+    lines = (text or "").replace("\r\n", "\n").split("\n")
+    blocks, i = [], 0
+    while i < len(lines):
+        line = lines[i]
+        if not line.strip():
+            i += 1
+            continue
+        if re.match(r"^---+\s*$", line):
+            blocks.append("<hr>")
+            i += 1
+            continue
+        heading = re.match(r"^(#{1,3})\s+(.+?)\s*$", line)
+        if heading:
+            level = len(heading.group(1))
+            blocks.append(f"<h{level}>{weekly_inline(heading.group(2))}</h{level}>")
+            i += 1
+            continue
+        if re.match(r"^[-*]\s+", line):
+            items = []
+            while i < len(lines) and re.match(r"^[-*]\s+", lines[i]):
+                items.append(re.sub(r"^[-*]\s+", "", lines[i].strip()))
+                i += 1
+            blocks.append("<ul>" + "".join(f"<li>{weekly_inline(item)}</li>" for item in items) + "</ul>")
+            continue
+        para = []
+        while i < len(lines) and lines[i].strip() and not re.match(r"^(?:#{1,3}\s|---+\s*$|[-*]\s+)", lines[i]):
+            para.append(lines[i])
+            i += 1
+        chunks = []
+        for j, raw in enumerate(para):
+            chunks.append(weekly_inline(raw.strip()))
+            if j != len(para) - 1:
+                chunks.append("<br>" if raw.endswith("  ") else " ")
+        blocks.append(f"<p>{''.join(chunks)}</p>")
+    return "".join(blocks)
+
+
+def weekly_title(text):
+    m = re.search(r"^#\s+(.+?)\s*$", text or "", flags=re.M)
+    return m.group(1).strip() if m else ""
+
+
+def weekly_body(text):
+    return re.sub(r"^#\s+.+?\n", "", text or "", count=1).lstrip("\n")
+
+
+def load_weeklies():
+    """Weekly articles live beside daily issues and never enter the issue sequence."""
+    root = SRC / "weekly"
+    if not root.is_dir():
+        return []
+    found = []
+    for path in sorted(root.glob("*.zh.md")):
+        m = WEEKLY_ZH.match(path.name)
+        if not m:
+            continue
+        date = datetime.date.fromisoformat(m.group(1))
+        en = root / f"{date.isoformat()}.en.md"
+        found.append({
+            "date": date,
+            "zh": path.read_text(encoding="utf-8"),
+            "en": en.read_text(encoding="utf-8") if en.is_file() else "",
+            "slug": f"weekly-{date.isoformat()}",
+        })
+    return found
+
+
+def weekly_text(w):
+    if LANG == "en" and w.get("en"):
+        return w["en"]
+    return w["zh"]
+
+
+def weekly_count_text(n):
+    if LANG == "zh":
+        return f"{n} 篇"
+    return "1 weekly" if n == 1 else f"{n} weeklies"
+
+
+def render_weekly_section(weeklies):
+    if not weeklies:
+        return ""
+    cards = []
+    for w in reversed(weeklies):
+        text = weekly_text(w)
+        missing = LANG == "en" and not w.get("en")
+        badge = (f'<span class="badge" title="{esc(t("untranslated_weekly"))}">ZH</span>' if missing else "")
+        cards.append(f'''<a class="weekly-card" href="{w["slug"]}.html">
+  <span class="weekly-mark">{t("weekly")}</span>
+  <span class="weekly-title">{esc(weekly_title(text))}</span>
+  <span class="card-date">{fmt_date(w["date"])}{badge}</span>
+  <span class="card-lede">{esc(weekly_lede(text))}</span></a>''')
+    return f'''<section class="weekly-shelf" id="weekly">
+  <h2 class="month">{t("weekly")}<span>{weekly_count_text(len(weeklies))}</span></h2>
+  <div class="weekly-list">{"".join(cards)}</div>
+</section>'''
+
+
+def weekly_lede(text):
+    """First prose paragraph after the bold publication/window lines. Verbatim."""
+    body = weekly_body(text)
+    for para in re.split(r"\n\s*\n", body):
+        raw = para.strip()
+        if not raw or raw.startswith("#") or raw.startswith("---"):
+            continue
+        lines = [re.sub(r"^\*\*|\*\*$", "", ln.strip()).strip() for ln in raw.splitlines()]
+        if lines and all(not ln or ln.startswith((
+                "发布日", "报道窗口", "Publication date", "Coverage window")) for ln in lines):
+            continue
+        plain = re.sub(r"\s+", " ", re.sub(r"\*\*([^*]+)\*\*", r"\1", raw)).strip()
+        sentence = re.match(r"^.*?[。！？]|^.*?\.(?=\s+[A-Z“\"])", plain)
+        return sentence.group(0) if sentence else plain
+    return ""
+
+
+def render_weekly(w):
+    text = weekly_text(w)
+    title = weekly_title(text)
+    lede = weekly_lede(text)
+    article = render_markdown(weekly_body(text))
+    band = f'''<header class="issue-head weekly-head wrap">
+    <div class="issue-intro">
+      <p class="kicker" style="--i:0">{t("weekly")} · {fmt_date(w["date"])}</p>
+      <h1 style="--i:1">{esc(title)}</h1>
+    </div>
+  </header>'''
+    body = f'''<main class="issue weekly wrap">
+  <article class="weekly-body">{article}</article>
+  <p class="weekly-back"><a href="index.html#weekly">{t("weekly_back")}</a></p>
+</main>'''
+    notice = t("untranslated_weekly") if LANG == "en" and not w.get("en") else ""
+    return page(f"{title} · {t('brand')}", band, body, lede or title, slug=w["slug"], notice=notice)
+
+
+def render_index(issues, weeklies=()):
     # On the English site the hero is the newest issue that actually has an English edition;
     # issues without one still appear in the archive, marked ZH, so the count stays honest.
     latest = next((i for i in reversed(issues) if has_edition(i)), issues[-1])
@@ -465,7 +638,7 @@ def render_index(issues):
   <span class="card-date">{t("issue_date", no=i["no"], date=dot_date(i))}{'' if has_edition(i) else f'<span class="badge" title="{esc(t("untranslated"))}">ZH</span>'}</span>
   <span class="card-lede">{esc(plain(content(i)["lede"]))}</span></a>''' for i in items)
         grid.append(f'<h2 class="month">{m}<span>{t("count", n=len(items))}</span></h2><div class="grid">{cards}</div>')
-    body = f'<main class="archive wrap" id="archive">{"".join(grid)}</main>'
+    body = f'<main class="archive wrap" id="archive">{render_weekly_section(weeklies)}{"".join(grid)}</main>'
     return page(t("brand"), hero, body, plain(lc["lede"]))
 
 
@@ -528,7 +701,7 @@ def render_issue(i, prev, nxt):
 
 
 def main():
-    global LANG, BASE
+    global LANG, BASE, SHOW_WEEKLY
     issues = sorted((parse_issue(p) for p in SRC.glob("AI-Daily-*.md")), key=lambda i: i["date"])
     if not issues:
         sys.exit(f"no issues found in {SRC}")
@@ -538,6 +711,9 @@ def main():
         en = SRC / "en" / f"AI-Daily-{ymd(i)}.md"
         if en.is_file():
             i["en"] = parse_issue(en)
+    # Weeklies are a separate sequence. They must not be appended to `issues` or given a 期号.
+    weeklies = load_weeklies()
+    SHOW_WEEKLY = bool(weeklies)
     if OUT.exists():
         shutil.rmtree(OUT)
     OUT.mkdir(parents=True)
@@ -548,13 +724,16 @@ def main():
         shutil.copytree(SRC / "images", OUT / "images")
     for LANG, BASE, out in (("zh", "", OUT), ("en", "../", OUT / "en")):
         out.mkdir(exist_ok=True)
-        (out / "index.html").write_text(render_index(issues), encoding="utf-8")
+        (out / "index.html").write_text(render_index(issues, weeklies), encoding="utf-8")
         for n, i in enumerate(issues):
             prev = issues[n - 1] if n else None
             nxt = issues[n + 1] if n + 1 < len(issues) else None
             (out / f"{ymd(i)}.html").write_text(render_issue(i, prev, nxt), encoding="utf-8")
+        for w in weeklies:
+            (out / f"{w['slug']}.html").write_text(render_weekly(w), encoding="utf-8")
     n_en = sum(1 for i in issues if i.get("en"))
-    print(f"built {len(issues)} issues (zh + en, {n_en} with English editions) -> {OUT}")
+    weekly_note = f", {len(weeklies)} weekly" if weeklies else ""
+    print(f"built {len(issues)} issues (zh + en, {n_en} with English editions){weekly_note} -> {OUT}")
 
 
 if __name__ == "__main__":
